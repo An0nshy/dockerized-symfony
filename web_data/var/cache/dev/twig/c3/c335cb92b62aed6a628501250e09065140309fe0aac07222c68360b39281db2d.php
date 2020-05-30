@@ -173,6 +173,6 @@ class __TwigTemplate_9facf1c5f57c300932a26ed786beaad12751d8b79dac364f0baa62be3be
         {% block javascripts %}{% endblock %}
     </body>
 </html>
-", "base.html.twig", "/home/anonshy/anonshy/www/docker/Webserver/web_data/test/templates/base.html.twig");
+", "base.html.twig", "/home/anonshy/anonshy/www/docker/Webserver/web_data/templates/base.html.twig");
     }
 }

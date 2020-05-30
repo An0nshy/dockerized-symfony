@@ -156,6 +156,6 @@ class __TwigTemplate_f037924441b2284d67d5e3db76033a51ed902faa7dc0692b5662b5d5325
     <h2>{{ messages[about].title }}</h2>
     <p>{{ messages[about].message }}</p>
 {% endblock %}
-", "@WebProfiler/Profiler/info.html.twig", "/home/anonshy/anonshy/www/docker/Webserver/web_data/test/vendor/symfony/web-profiler-bundle/Resources/views/Profiler/info.html.twig");
+", "@WebProfiler/Profiler/info.html.twig", "/home/anonshy/anonshy/www/docker/Webserver/web_data/vendor/symfony/web-profiler-bundle/Resources/views/Profiler/info.html.twig");
     }
 }

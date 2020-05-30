@@ -471,6 +471,6 @@ class __TwigTemplate_53c6a99d9252657270767b9612f8701fcf3af8d8bea7d9345a429cb3c8d
         </div>
     {% endif %}
 {% endblock %}
-", "@WebProfiler/Collector/twig.html.twig", "/home/anonshy/anonshy/www/docker/Webserver/web_data/test/vendor/symfony/web-profiler-bundle/Resources/views/Collector/twig.html.twig");
+", "@WebProfiler/Collector/twig.html.twig", "/home/anonshy/anonshy/www/docker/Webserver/web_data/vendor/symfony/web-profiler-bundle/Resources/views/Collector/twig.html.twig");
     }
 }

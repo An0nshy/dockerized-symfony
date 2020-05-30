@@ -14,7 +14,7 @@ use OutOfBoundsException;
  */
 final class Versions
 {
-    public const ROOT_PACKAGE_NAME = 'symfony/website-skeleton';
+    public const ROOT_PACKAGE_NAME = '__root__';
     /**
      * Array of all available composer packages.
      * Dont read this array from your calling code, but use the \PackageVersions\Versions::getVersion() method instead.
@@ -26,13 +26,13 @@ final class Versions
   'doctrine/annotations' => '1.10.3@5db60a4969eba0e0c197a19c077780aadbc43c5d',
   'doctrine/cache' => '1.10.1@35a4a70cd94e09e2259dfae7488afc6b474ecbd3',
   'doctrine/collections' => '1.6.5@fc0206348e17e530d09463fef07ba8968406cd6d',
-  'doctrine/common' => '2.13.1@fb00cd761126b11d8f334c09cf5b1f3f83fefc17',
+  'doctrine/common' => '2.13.2@6902fafacb43333d9dc3d949c0a06048a31549ac',
   'doctrine/dbal' => '2.10.2@aab745e7b6b2de3b47019da81e7225e14dcfdac8',
   'doctrine/doctrine-bundle' => '2.1.0@0fb513842c78b43770597ef3c487cdf79d944db3',
   'doctrine/doctrine-migrations-bundle' => '2.1.2@856437e8de96a70233e1f0cc2352fc8dd15a899d',
   'doctrine/event-manager' => '1.1.0@629572819973f13486371cb611386eb17851e85c',
   'doctrine/inflector' => '1.4.3@4650c8b30c753a76bf44fb2ed00117d6f367490c',
-  'doctrine/instantiator' => '1.3.0@ae466f726242e637cebdd526a7d991b9433bacf1',
+  'doctrine/instantiator' => '1.3.1@f350df0268e904597e3bd9c4685c53e0e333feea',
   'doctrine/lexer' => '1.2.1@e864bbf5904cb8f5bb334f99209b48018522f042',
   'doctrine/migrations' => '2.2.1@a3987131febeb0e9acb3c47ab0df0af004588934',
   'doctrine/orm' => 'v2.7.3@d95e03ba660d50d785a9925f41927fef0ee553cf',
@@ -130,14 +130,14 @@ final class Versions
   'symfony/profiler-pack' => 'v1.0.4@99c4370632c2a59bb0444852f92140074ef02209',
   'symfony/test-pack' => 'v1.0.6@ff87e800a67d06c423389f77b8209bc9dc469def',
   'symfony/web-profiler-bundle' => 'v5.0.8@67fc2302ba7ca3d917decea6d3accdbd055398d1',
-  'paragonie/random_compat' => '2.*@',
-  'symfony/polyfill-ctype' => '*@',
-  'symfony/polyfill-iconv' => '*@',
-  'symfony/polyfill-php72' => '*@',
-  'symfony/polyfill-php71' => '*@',
-  'symfony/polyfill-php70' => '*@',
-  'symfony/polyfill-php56' => '*@',
-  'symfony/website-skeleton' => 'v5.0.99@',
+  'paragonie/random_compat' => '2.*@900af9ba3d946dfee8e6f518ef04f7915e7db27d',
+  'symfony/polyfill-ctype' => '*@900af9ba3d946dfee8e6f518ef04f7915e7db27d',
+  'symfony/polyfill-iconv' => '*@900af9ba3d946dfee8e6f518ef04f7915e7db27d',
+  'symfony/polyfill-php72' => '*@900af9ba3d946dfee8e6f518ef04f7915e7db27d',
+  'symfony/polyfill-php71' => '*@900af9ba3d946dfee8e6f518ef04f7915e7db27d',
+  'symfony/polyfill-php70' => '*@900af9ba3d946dfee8e6f518ef04f7915e7db27d',
+  'symfony/polyfill-php56' => '*@900af9ba3d946dfee8e6f518ef04f7915e7db27d',
+  '__root__' => 'dev-master@900af9ba3d946dfee8e6f518ef04f7915e7db27d',
 );
 
     private function __construct()

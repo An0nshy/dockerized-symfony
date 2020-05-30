@@ -71,6 +71,6 @@ class __TwigTemplate_b84a2914192e0448fac3b6d5f92176b8c0c023f76f981d91c15eff38e4f
     public function getSourceContext()
     {
         return new Source("{% extends \"@email/zurb_2/notification/body.html.twig\" %}
-", "@email/default/notification/body.html.twig", "/home/anonshy/anonshy/www/docker/Webserver/web_data/test/vendor/symfony/twig-bridge/Resources/views/Email/default/notification/body.html.twig");
+", "@email/default/notification/body.html.twig", "/home/anonshy/anonshy/www/docker/Webserver/web_data/vendor/symfony/twig-bridge/Resources/views/Email/default/notification/body.html.twig");
     }
 }
