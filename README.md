@@ -22,3 +22,8 @@ Or you have composer localy installed.
 
 - go/to/your/DockerContainer
 - ./bin/console [command]
+
+
+In case u get a permission erros run add the web_data folder to the www-data group or use chmod.
+
+- chown -R www-data web_data/
