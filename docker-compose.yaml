@@ -1,0 +1,48 @@
+version: '3.7'
+
+volumes: 
+    db_data:
+    web_data:
+    apache_conf:
+#    caddy:
+
+services:
+
+    db:
+        image: mysql:8.0
+        ports: 
+            - "3306:3306"
+        volumes:
+            - db_data:/var/lib/mysql
+        restart: always
+        environment:
+            MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+            MYSQL_DATABASE: "${MYSQL_DATABASE}"
+            MYSQL_USER: "${MYSQL_USER}"
+            MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+
+    pma:
+        depends_on:
+            - db
+        image: phpmyadmin/phpmyadmin
+        restart: always
+        ports:
+            - '8081:80'
+
+    php:
+        build: 
+            context: ./php
+            dockerfile: Dockerfile
+        expose: 
+            - 9000
+        depends_on: 
+            - db
+        links: 
+            - db
+        ports: 
+            - "8080:80"
+            - "443:443"
+        restart: on-failure
+        volumes: 
+            - ./web_data:/var/www/html/test
+            - ./apache_conf:/etc/apache2/sites-enabled/
