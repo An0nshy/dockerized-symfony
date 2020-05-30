@@ -1882,6 +1882,6 @@ class __TwigTemplate_74f429287c0a975495fecb56b406b3deee5482215911dbc54a64d5d7d57
         </tbody>
     </table>
 {% endmacro %}
-", "@Doctrine/Collector/db.html.twig", "/home/anonshy/anonshy/www/docker/Webserver/web_data/vendor/doctrine/doctrine-bundle/Resources/views/Collector/db.html.twig");
+", "@Doctrine/Collector/db.html.twig", "/var/www/html/vendor/doctrine/doctrine-bundle/Resources/views/Collector/db.html.twig");
     }
 }
