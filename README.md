@@ -12,3 +12,13 @@ Database: localhost:3306
 Phpmyadmin: localhost:8081
 
 If you want to change the Enviorment you can change the settings in the .env file in the root directory.
+
+How to use:
+
+- docker exec -it webserver_php_1 bash
+- .bin/console [command]
+
+Or you have composer localy installed.
+
+- go/to/your/DockerContainer
+- ./bin/console [command]
