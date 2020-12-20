@@ -16,6 +16,6 @@ if (!\class_exists(App_KernelDevDebugContainer::class, false)) {
 
 return new \ContainerWfcZtNO\App_KernelDevDebugContainer([
     'container.build_hash' => 'WfcZtNO',
-    'container.build_id' => '3c75e266',
-    'container.build_time' => 1590855296,
+    'container.build_id' => 'b314c1b2',
+    'container.build_time' => 1608478101,
 ], __DIR__.\DIRECTORY_SEPARATOR.'ContainerWfcZtNO');

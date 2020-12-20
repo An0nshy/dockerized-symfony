@@ -38,6 +38,7 @@ use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Validator\Validation;
+use SymfonyCasts\Bundle\VerifyEmail\Model\VerifyEmailSignatureComponents;
 use SymfonyCasts\Bundle\VerifyEmail\SymfonyCastsVerifyEmailBundle;
 
 /**
@@ -298,7 +299,7 @@ final class MakeRegistrationForm extends AbstractMaker
                 UniqueEntity::class,
                 [
                     'fields' => [$usernameField],
-                    'message' => sprintf('There is already an account with this '.$usernameField),
+                    'message' => sprintf('There is already an account with this %s', $usernameField),
                 ]
             );
             $this->fileManager->dumpFile($classDetails->getPath(), $userManipulator->getSourceCode());
@@ -368,7 +369,15 @@ final class MakeRegistrationForm extends AbstractMaker
         $missing = false;
         $composerMessage = 'composer require';
 
-        if (!class_exists(SymfonyCastsVerifyEmailBundle::class)) {
+        // verify-email-bundle 1.1.1 includes support for translations and a fix for the bad expiration time bug.
+        // we need to check that if the bundle is installed, it is version 1.1.1 or greater
+        if (class_exists(SymfonyCastsVerifyEmailBundle::class)) {
+            $reflectedComponents = new \ReflectionClass(VerifyEmailSignatureComponents::class);
+
+            if (!$reflectedComponents->hasMethod('getExpirationMessageKey')) {
+                throw new RuntimeCommandException('Please upgrade symfonycasts/verify-email-bundle to version 1.1.1 or greater.');
+            }
+        } else {
             $missing = true;
             $composerMessage = sprintf('%s symfonycasts/verify-email-bundle', $composerMessage);
         }

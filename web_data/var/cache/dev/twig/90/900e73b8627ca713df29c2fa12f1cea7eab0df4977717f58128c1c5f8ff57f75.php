@@ -843,6 +843,6 @@ class __TwigTemplate_ca76fef94f7f7ce8042a364270265dc7779eaab1518de1289384678b3d8
     </table>
     {% endfor %}
 {% endmacro %}
-", "@WebProfiler/Collector/messenger.html.twig", "/home/anonshy/anonshy/www/docker/Webserver/web_data/vendor/symfony/web-profiler-bundle/Resources/views/Collector/messenger.html.twig");
+", "@WebProfiler/Collector/messenger.html.twig", "/var/www/html/vendor/symfony/web-profiler-bundle/Resources/views/Collector/messenger.html.twig");
     }
 }

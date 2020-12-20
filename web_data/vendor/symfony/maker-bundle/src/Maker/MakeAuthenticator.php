@@ -35,10 +35,13 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Form\Form;
 use Symfony\Component\HttpKernel\Kernel;
+use Symfony\Component\Security\Guard\Authenticator\AbstractFormLoginAuthenticator;
+use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Yaml\Yaml;
 
 /**
- * @author Ryan Weaver <ryan@knpuniversity.com>
+ * @author Ryan Weaver   <ryan@symfonycasts.com>
+ * @author Jesse Rushlow <jr@rushlow.dev>
  *
  * @internal
  */
@@ -54,6 +57,8 @@ final class MakeAuthenticator extends AbstractMaker
     private $generator;
 
     private $doctrineHelper;
+
+    private $useSecurity52 = false;
 
     public function __construct(FileManager $fileManager, SecurityConfigUpdater $configUpdater, Generator $generator, DoctrineHelper $doctrineHelper)
     {
@@ -82,6 +87,15 @@ final class MakeAuthenticator extends AbstractMaker
         }
         $manipulator = new YamlSourceManipulator($this->fileManager->getFileContents($path));
         $securityData = $manipulator->getData();
+
+        // Determine if we should use new security features introduced in Symfony 5.2
+        if ($securityData['security']['enable_authenticator_manager'] ?? false) {
+            $this->useSecurity52 = true;
+        }
+
+        if ($this->useSecurity52 && !class_exists(UserBadge::class)) {
+            throw new RuntimeCommandException('MakerBundle does not support generating authenticators using the new authenticator system before symfony/security-bundle 5.2. Please upgrade to 5.2 and try again.');
+        }
 
         // authenticator type
         $authenticatorTypeValues = [
@@ -137,10 +151,13 @@ final class MakeAuthenticator extends AbstractMaker
         $input->setOption('firewall-name', $firewallName = $interactiveSecurityHelper->guessFirewallName($io, $securityData));
 
         $command->addOption('entry-point', null, InputOption::VALUE_OPTIONAL);
-        $input->setOption(
-            'entry-point',
-            $interactiveSecurityHelper->guessEntryPoint($io, $securityData, $input->getArgument('authenticator-class'), $firewallName)
-        );
+
+        if (!$this->useSecurity52) {
+            $input->setOption(
+                'entry-point',
+                $interactiveSecurityHelper->guessEntryPoint($io, $securityData, $input->getArgument('authenticator-class'), $firewallName)
+            );
+        }
 
         if (self::AUTH_TYPE_FORM_LOGIN === $input->getArgument('authenticator-type')) {
             $command->addArgument('controller-class', InputArgument::REQUIRED);
@@ -191,13 +208,21 @@ final class MakeAuthenticator extends AbstractMaker
 
         // update security.yaml with guard config
         $securityYamlUpdated = false;
+
+        $entryPoint = $input->getOption('entry-point');
+
+        if ($this->useSecurity52 && self::AUTH_TYPE_FORM_LOGIN !== $input->getArgument('authenticator-type')) {
+            $entryPoint = false;
+        }
+
         try {
             $newYaml = $this->configUpdater->updateForAuthenticator(
                 $this->fileManager->getFileContents($path = 'config/packages/security.yaml'),
                 $input->getOption('firewall-name'),
-                $input->getOption('entry-point'),
+                $entryPoint,
                 $input->getArgument('authenticator-class'),
-                $input->hasArgument('logout-setup') ? $input->getArgument('logout-setup') : false
+                $input->hasArgument('logout-setup') ? $input->getArgument('logout-setup') : false,
+                $this->useSecurity52
             );
             $generator->dumpFile($path, $newYaml);
             $securityYamlUpdated = true;
@@ -222,7 +247,8 @@ final class MakeAuthenticator extends AbstractMaker
                 $input->getArgument('authenticator-type'),
                 $input->getArgument('authenticator-class'),
                 $securityData,
-                $input->hasArgument('user-class') ? $input->getArgument('user-class') : null
+                $input->hasArgument('user-class') ? $input->getArgument('user-class') : null,
+                $input->hasArgument('logout-setup') ? $input->getArgument('logout-setup') : false
             )
         );
     }
@@ -233,8 +259,8 @@ final class MakeAuthenticator extends AbstractMaker
         if (self::AUTH_TYPE_EMPTY_AUTHENTICATOR === $authenticatorType) {
             $this->generator->generateClass(
                 $authenticatorClass,
-                'authenticator/EmptyAuthenticator.tpl.php',
-                []
+                sprintf('authenticator/%sEmptyAuthenticator.tpl.php', $this->useSecurity52 ? 'Security52' : ''),
+                ['provider_key_type_hint' => $this->providerKeyTypeHint()]
             );
 
             return;
@@ -247,14 +273,16 @@ final class MakeAuthenticator extends AbstractMaker
 
         $this->generator->generateClass(
             $authenticatorClass,
-            'authenticator/LoginFormAuthenticator.tpl.php',
+            sprintf('authenticator/%sLoginFormAuthenticator.tpl.php', $this->useSecurity52 ? 'Security52' : ''),
             [
                 'user_fully_qualified_class_name' => trim($userClassNameDetails->getFullName(), '\\'),
                 'user_class_name' => $userClassNameDetails->getShortName(),
                 'username_field' => $userNameField,
                 'username_field_label' => Str::asHumanWords($userNameField),
+                'username_field_var' => Str::asCamelCase($userNameField),
                 'user_needs_encoder' => $this->userClassHasEncoder($securityData, $userClass),
                 'user_is_entity' => $this->doctrineHelper->isClassAMappedEntity($userClass),
+                'provider_key_type_hint' => $this->providerKeyTypeHint(),
             ]
         );
     }
@@ -306,7 +334,7 @@ final class MakeAuthenticator extends AbstractMaker
         );
     }
 
-    private function generateNextMessage(bool $securityYamlUpdated, string $authenticatorType, string $authenticatorClass, array $securityData, $userClass): array
+    private function generateNextMessage(bool $securityYamlUpdated, string $authenticatorType, string $authenticatorClass, array $securityData, $userClass, bool $logoutSetup): array
     {
         $nextTexts = ['Next:'];
         $nextTexts[] = '- Customize your new authenticator.';
@@ -316,9 +344,11 @@ final class MakeAuthenticator extends AbstractMaker
                 'security: {}',
                 'main',
                 null,
-                $authenticatorClass
+                $authenticatorClass,
+                $logoutSetup,
+                $this->useSecurity52
             );
-            $nextTexts[] = '- Your <info>security.yaml</info> could not be updated automatically. You\'ll need to add the following config manually:\n\n'.$yamlExample;
+            $nextTexts[] = "- Your <info>security.yaml</info> could not be updated automatically. You'll need to add the following config manually:\n\n".$yamlExample;
         }
 
         if (self::AUTH_TYPE_FORM_LOGIN === $authenticatorType) {
@@ -364,5 +394,16 @@ final class MakeAuthenticator extends AbstractMaker
             Yaml::class,
             'yaml'
         );
+    }
+
+    private function providerKeyTypeHint(): string
+    {
+        $reflectionMethod = new \ReflectionMethod(AbstractFormLoginAuthenticator::class, 'onAuthenticationSuccess');
+        $typeHint = (string) $reflectionMethod->getParameters()[2]->getType();
+        if ($typeHint) {
+            $typeHint .= ' ';
+        }
+
+        return $typeHint;
     }
 }

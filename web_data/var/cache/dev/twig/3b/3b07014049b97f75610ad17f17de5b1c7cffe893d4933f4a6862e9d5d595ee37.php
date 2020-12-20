@@ -97,6 +97,6 @@ class __TwigTemplate_cd10b80962cc246f65c8c70b23fa5d6f6f848d687c0fa10a095c03cb762
         </div>
     </div>
 </div>
-", "@WebProfiler/Profiler/header.html.twig", "/home/anonshy/anonshy/www/docker/Webserver/web_data/vendor/symfony/web-profiler-bundle/Resources/views/Profiler/header.html.twig");
+", "@WebProfiler/Profiler/header.html.twig", "/var/www/html/vendor/symfony/web-profiler-bundle/Resources/views/Profiler/header.html.twig");
     }
 }
