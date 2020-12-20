@@ -31,14 +31,14 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class DateTimeType extends AbstractType
 {
-    const DEFAULT_DATE_FORMAT = \IntlDateFormatter::MEDIUM;
-    const DEFAULT_TIME_FORMAT = \IntlDateFormatter::MEDIUM;
+    public const DEFAULT_DATE_FORMAT = \IntlDateFormatter::MEDIUM;
+    public const DEFAULT_TIME_FORMAT = \IntlDateFormatter::MEDIUM;
 
     /**
      * The HTML5 datetime-local format as defined in
      * http://w3c.github.io/html-reference/datatypes.html#form.data.datetime-local.
      */
-    const HTML5_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+    public const HTML5_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 
     private static $acceptedFormats = [
         \IntlDateFormatter::FULL,
@@ -273,6 +273,11 @@ class DateTimeType extends AbstractType
                 return $options['compound'] ? [] : '';
             },
             'input_format' => 'Y-m-d H:i:s',
+            'invalid_message' => function (Options $options, $previousValue) {
+                return ($options['legacy_error_messages'] ?? true)
+                    ? $previousValue
+                    : 'Please enter a valid date and time.';
+            },
         ]);
 
         // Don't add some defaults in order to preserve the defaults

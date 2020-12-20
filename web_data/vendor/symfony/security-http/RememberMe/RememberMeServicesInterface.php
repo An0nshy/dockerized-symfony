@@ -24,6 +24,8 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
  * - PersistentTokenBasedRememberMeServices (requires a TokenProvider)
  *
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
+ *
+ * @method logout(Request $request, Response $response, TokenInterface $token)
  */
 interface RememberMeServicesInterface
 {
@@ -31,7 +33,7 @@ interface RememberMeServicesInterface
      * This attribute name can be used by the implementation if it needs to set
      * a cookie on the Request when there is no actual Response, yet.
      */
-    const COOKIE_ATTR_NAME = '_security_remember_me_cookie';
+    public const COOKIE_ATTR_NAME = '_security_remember_me_cookie';
 
     /**
      * This method will be called whenever the TokenStorage does not contain

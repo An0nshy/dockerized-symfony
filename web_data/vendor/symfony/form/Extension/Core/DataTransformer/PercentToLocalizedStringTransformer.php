@@ -23,26 +23,30 @@ use Symfony\Component\Form\Exception\UnexpectedTypeException;
  */
 class PercentToLocalizedStringTransformer implements DataTransformerInterface
 {
-    const FRACTIONAL = 'fractional';
-    const INTEGER = 'integer';
+    public const FRACTIONAL = 'fractional';
+    public const INTEGER = 'integer';
 
     protected static $types = [
         self::FRACTIONAL,
         self::INTEGER,
     ];
 
+    private $roundingMode;
     private $type;
     private $scale;
+    private $html5Format;
 
     /**
      * @see self::$types for a list of supported types
      *
-     * @param int    $scale The scale
-     * @param string $type  One of the supported types
+     * @param int      $scale        The scale
+     * @param string   $type         One of the supported types
+     * @param int|null $roundingMode A value from \NumberFormatter, such as \NumberFormatter::ROUND_HALFUP
+     * @param bool     $html5Format  Use an HTML5 specific format, see https://www.w3.org/TR/html51/sec-forms.html#date-time-and-number-formats
      *
      * @throws UnexpectedTypeException if the given value of type is unknown
      */
-    public function __construct(int $scale = null, string $type = null)
+    public function __construct(int $scale = null, string $type = null, ?int $roundingMode = null, bool $html5Format = false)
     {
         if (null === $scale) {
             $scale = 0;
@@ -52,12 +56,18 @@ class PercentToLocalizedStringTransformer implements DataTransformerInterface
             $type = self::FRACTIONAL;
         }
 
+        if (null === $roundingMode && (\func_num_args() < 4 || func_get_arg(3))) {
+            trigger_deprecation('symfony/form', '5.1', 'Not passing a rounding mode to "%s()" is deprecated. Starting with Symfony 6.0 it will default to "\NumberFormatter::ROUND_HALFUP".', __METHOD__);
+        }
+
         if (!\in_array($type, self::$types, true)) {
             throw new UnexpectedTypeException($type, implode('", "', self::$types));
         }
 
         $this->type = $type;
         $this->scale = $scale;
+        $this->roundingMode = $roundingMode;
+        $this->html5Format = $html5Format;
     }
 
     /**
@@ -166,7 +176,7 @@ class PercentToLocalizedStringTransformer implements DataTransformerInterface
             }
         }
 
-        return $result;
+        return $this->round($result);
     }
 
     /**
@@ -176,10 +186,70 @@ class PercentToLocalizedStringTransformer implements DataTransformerInterface
      */
     protected function getNumberFormatter()
     {
-        $formatter = new \NumberFormatter(\Locale::getDefault(), \NumberFormatter::DECIMAL);
+        // Values used in HTML5 number inputs should be formatted as in "1234.5", ie. 'en' format without grouping,
+        // according to https://www.w3.org/TR/html51/sec-forms.html#date-time-and-number-formats
+        $formatter = new \NumberFormatter($this->html5Format ? 'en' : \Locale::getDefault(), \NumberFormatter::DECIMAL);
+
+        if ($this->html5Format) {
+            $formatter->setAttribute(\NumberFormatter::GROUPING_USED, 0);
+        }
 
         $formatter->setAttribute(\NumberFormatter::FRACTION_DIGITS, $this->scale);
 
+        if (null !== $this->roundingMode) {
+            $formatter->setAttribute(\NumberFormatter::ROUNDING_MODE, $this->roundingMode);
+        }
+
         return $formatter;
+    }
+
+    /**
+     * Rounds a number according to the configured scale and rounding mode.
+     *
+     * @param int|float $number A number
+     *
+     * @return int|float The rounded number
+     */
+    private function round($number)
+    {
+        if (null !== $this->scale && null !== $this->roundingMode) {
+            // shift number to maintain the correct scale during rounding
+            $roundingCoef = pow(10, $this->scale);
+
+            if (self::FRACTIONAL == $this->type) {
+                $roundingCoef *= 100;
+            }
+
+            // string representation to avoid rounding errors, similar to bcmul()
+            $number = (string) ($number * $roundingCoef);
+
+            switch ($this->roundingMode) {
+                case \NumberFormatter::ROUND_CEILING:
+                    $number = ceil($number);
+                    break;
+                case \NumberFormatter::ROUND_FLOOR:
+                    $number = floor($number);
+                    break;
+                case \NumberFormatter::ROUND_UP:
+                    $number = $number > 0 ? ceil($number) : floor($number);
+                    break;
+                case \NumberFormatter::ROUND_DOWN:
+                    $number = $number > 0 ? floor($number) : ceil($number);
+                    break;
+                case \NumberFormatter::ROUND_HALFEVEN:
+                    $number = round($number, 0, \PHP_ROUND_HALF_EVEN);
+                    break;
+                case \NumberFormatter::ROUND_HALFUP:
+                    $number = round($number, 0, \PHP_ROUND_HALF_UP);
+                    break;
+                case \NumberFormatter::ROUND_HALFDOWN:
+                    $number = round($number, 0, \PHP_ROUND_HALF_DOWN);
+                    break;
+            }
+
+            $number = 1 === $roundingCoef ? (int) $number : $number / $roundingCoef;
+        }
+
+        return $number;
     }
 }

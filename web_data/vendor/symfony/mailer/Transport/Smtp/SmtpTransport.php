@@ -103,9 +103,9 @@ class SmtpTransport extends AbstractTransport
     public function setLocalDomain(string $domain): self
     {
         if ('' !== $domain && '[' !== $domain[0]) {
-            if (filter_var($domain, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            if (filter_var($domain, \FILTER_VALIDATE_IP, \FILTER_FLAG_IPV4)) {
                 $domain = '['.$domain.']';
-            } elseif (filter_var($domain, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            } elseif (filter_var($domain, \FILTER_VALIDATE_IP, \FILTER_FLAG_IPV6)) {
                 $domain = '[IPv6:'.$domain.']';
             }
         }
@@ -290,7 +290,7 @@ class SmtpTransport extends AbstractTransport
             throw new TransportException(sprintf('Expected response code "%s" but got an empty response.', implode('/', $codes)));
         }
 
-        list($code) = sscanf($response, '%3d');
+        [$code] = sscanf($response, '%3d');
         $valid = \in_array($code, $codes);
 
         if (!$valid) {

@@ -18,7 +18,9 @@
     "require": {
         "php": ">=7.2.5",
         "symfony/event-dispatcher-contracts": "^1.1|^2",
-        "symfony/service-contracts": "^1.1.6|^2"
+        "symfony/polyfill-php80": "^1.15",
+        "symfony/service-contracts": "^1.1.6|^2",
+        "symfony/deprecation-contracts": "^2.1"
     },
     "require-dev": {
         "psr/container": "^1.0",
@@ -26,13 +28,15 @@
         "symfony/expression-language": "^4.4|^5.0",
         "symfony/http-foundation": "^4.4|^5.0",
         "symfony/ldap": "^4.4|^5.0",
-        "symfony/validator": "^4.4|^5.0",
+        "symfony/translation": "^4.4|^5.0",
+        "symfony/validator": "^5.2",
         "psr/log": "~1.0"
     },
     "conflict": {
         "symfony/event-dispatcher": "<4.4",
         "symfony/security-guard": "<4.4",
-        "symfony/ldap": "<4.4"
+        "symfony/ldap": "<4.4",
+        "symfony/validator": "<5.2"
     },
     "suggest": {
         "psr/container-implementation": "To instantiate the Security class",
@@ -48,10 +52,5 @@
             "/Tests/"
         ]
     },
-    "minimum-stability": "dev",
-    "extra": {
-        "branch-alias": {
-            "dev-master": "5.0-dev"
-        }
-    }
+    "minimum-stability": "dev"
 }

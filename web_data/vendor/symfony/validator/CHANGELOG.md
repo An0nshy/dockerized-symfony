@@ -1,6 +1,51 @@
 CHANGELOG
 =========
 
+5.2.0
+-----
+
+ * added a `Cascade` constraint to ease validating nested typed object properties
+ * deprecated the `allowEmptyString` option of the `Length` constraint
+
+   Before:
+
+   ```php
+   use Symfony\Component\Validator\Constraints as Assert;
+
+   /**
+    * @Assert\Length(min=5, allowEmptyString=true)
+    */
+   ```
+
+   After:
+
+   ```php
+   use Symfony\Component\Validator\Constraints as Assert;
+
+   /**
+    * @Assert\AtLeastOneOf({
+    *     @Assert\Blank(),
+    *     @Assert\Length(min=5)
+    * })
+    */
+   ```
+ * added the `Isin` constraint and validator
+ * added the `ULID` constraint and validator
+ * added support for UUIDv6 in `Uuid` constraint
+ * enabled the validator to load constraints from PHP attributes
+ * deprecated the `NumberConstraintTrait` trait
+ * deprecated setting or creating a Doctrine annotation reader via `ValidatorBuilder::enableAnnotationMapping()`, pass `true` as first parameter and additionally call `setDoctrineAnnotationReader()` or `addDefaultDoctrineAnnotationReader()` to set up the annotation reader
+
+5.1.0
+-----
+
+ * added the `Hostname` constraint and validator
+ * added the `alpha3` option to the `Country` and `Language` constraints
+ * allow to define a reusable set of constraints by extending the `Compound` constraint
+ * added `Sequentially` constraint, to sequentially validate a set of constraints (any violation raised will prevent further validation of the nested constraints)
+ * added the `divisibleBy` option to the `Count` constraint
+ * added the `ExpressionLanguageSyntax` constraint
+
 5.0.0
 -----
 

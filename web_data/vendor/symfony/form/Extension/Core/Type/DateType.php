@@ -28,8 +28,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class DateType extends AbstractType
 {
-    const DEFAULT_FORMAT = \IntlDateFormatter::MEDIUM;
-    const HTML5_FORMAT = 'yyyy-MM-dd';
+    public const DEFAULT_FORMAT = \IntlDateFormatter::MEDIUM;
+    public const HTML5_FORMAT = 'yyyy-MM-dd';
 
     private static $acceptedFormats = [
         \IntlDateFormatter::FULL,
@@ -299,6 +299,11 @@ class DateType extends AbstractType
             },
             'choice_translation_domain' => false,
             'input_format' => 'Y-m-d',
+            'invalid_message' => function (Options $options, $previousValue) {
+                return ($options['legacy_error_messages'] ?? true)
+                    ? $previousValue
+                    : 'Please enter a valid date.';
+            },
         ]);
 
         $resolver->setNormalizer('placeholder', $placeholderNormalizer);

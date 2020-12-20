@@ -12,8 +12,8 @@
 namespace Symfony\Component\Form\Extension\Core\Type;
 
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\FileUploadError;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\FormInterface;
@@ -24,8 +24,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 class FileType extends AbstractType
 {
-    const KIB_BYTES = 1024;
-    const MIB_BYTES = 1048576;
+    public const KIB_BYTES = 1024;
+    public const MIB_BYTES = 1048576;
 
     private static $suffixes = [
         1 => 'bytes',
@@ -130,6 +130,11 @@ class FileType extends AbstractType
             'empty_data' => $emptyData,
             'multiple' => false,
             'allow_file_upload' => true,
+            'invalid_message' => function (Options $options, $previousValue) {
+                return ($options['legacy_error_messages'] ?? true)
+                    ? $previousValue
+                    : 'Please select a valid file.';
+            },
         ]);
     }
 
@@ -145,14 +150,14 @@ class FileType extends AbstractType
     {
         $messageParameters = [];
 
-        if (UPLOAD_ERR_INI_SIZE === $errorCode) {
-            list($limitAsString, $suffix) = $this->factorizeSizes(0, self::getMaxFilesize());
+        if (\UPLOAD_ERR_INI_SIZE === $errorCode) {
+            [$limitAsString, $suffix] = $this->factorizeSizes(0, self::getMaxFilesize());
             $messageTemplate = 'The file is too large. Allowed maximum size is {{ limit }} {{ suffix }}.';
             $messageParameters = [
                 '{{ limit }}' => $limitAsString,
                 '{{ suffix }}' => $suffix,
             ];
-        } elseif (UPLOAD_ERR_FORM_SIZE === $errorCode) {
+        } elseif (\UPLOAD_ERR_FORM_SIZE === $errorCode) {
             $messageTemplate = 'The file is too large.';
         } else {
             $messageTemplate = 'The file could not be uploaded.';
@@ -164,7 +169,7 @@ class FileType extends AbstractType
             $message = strtr($messageTemplate, $messageParameters);
         }
 
-        return new FormError($message, $messageTemplate, $messageParameters);
+        return new FileUploadError($message, $messageTemplate, $messageParameters);
     }
 
     /**
@@ -177,7 +182,7 @@ class FileType extends AbstractType
         $iniMax = strtolower(ini_get('upload_max_filesize'));
 
         if ('' === $iniMax) {
-            return PHP_INT_MAX;
+            return \PHP_INT_MAX;
         }
 
         $max = ltrim($iniMax, '+');

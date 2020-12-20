@@ -14,6 +14,7 @@ namespace Symfony\Component\Security\Http\Firewall;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterface;
+use Symfony\Component\Security\Core\Authentication\Token\NullToken;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
@@ -35,13 +36,15 @@ class AccessListener extends AbstractListener
     private $accessDecisionManager;
     private $map;
     private $authManager;
+    private $exceptionOnNoToken;
 
-    public function __construct(TokenStorageInterface $tokenStorage, AccessDecisionManagerInterface $accessDecisionManager, AccessMapInterface $map, AuthenticationManagerInterface $authManager)
+    public function __construct(TokenStorageInterface $tokenStorage, AccessDecisionManagerInterface $accessDecisionManager, AccessMapInterface $map, AuthenticationManagerInterface $authManager, bool $exceptionOnNoToken = true)
     {
         $this->tokenStorage = $tokenStorage;
         $this->accessDecisionManager = $accessDecisionManager;
         $this->map = $map;
         $this->authManager = $authManager;
+        $this->exceptionOnNoToken = $exceptionOnNoToken;
     }
 
     /**
@@ -52,18 +55,18 @@ class AccessListener extends AbstractListener
         [$attributes] = $this->map->getPatterns($request);
         $request->attributes->set('_access_control_attributes', $attributes);
 
-        return $attributes && [AuthenticatedVoter::IS_AUTHENTICATED_ANONYMOUSLY] !== $attributes ? true : null;
+        return $attributes && ([AuthenticatedVoter::IS_AUTHENTICATED_ANONYMOUSLY] !== $attributes && [AuthenticatedVoter::PUBLIC_ACCESS] !== $attributes) ? true : null;
     }
 
     /**
      * Handles access authorization.
      *
      * @throws AccessDeniedException
-     * @throws AuthenticationCredentialsNotFoundException
+     * @throws AuthenticationCredentialsNotFoundException when the token storage has no authentication token and $exceptionOnNoToken is set to true
      */
     public function authenticate(RequestEvent $event)
     {
-        if (!$event instanceof LazyResponseEvent && null === $token = $this->tokenStorage->getToken()) {
+        if (!$event instanceof LazyResponseEvent && null === ($token = $this->tokenStorage->getToken()) && $this->exceptionOnNoToken) {
             throw new AuthenticationCredentialsNotFoundException('A Token was not found in the TokenStorage.');
         }
 
@@ -76,8 +79,16 @@ class AccessListener extends AbstractListener
             return;
         }
 
-        if ($event instanceof LazyResponseEvent && null === $token = $this->tokenStorage->getToken()) {
-            throw new AuthenticationCredentialsNotFoundException('A Token was not found in the TokenStorage.');
+        if ($event instanceof LazyResponseEvent) {
+            $token = $this->tokenStorage->getToken();
+        }
+
+        if (null === $token) {
+            if ($this->exceptionOnNoToken) {
+                throw new AuthenticationCredentialsNotFoundException('A Token was not found in the TokenStorage.');
+            }
+
+            $token = new NullToken();
         }
 
         if (!$token->isAuthenticated()) {
@@ -86,11 +97,21 @@ class AccessListener extends AbstractListener
         }
 
         if (!$this->accessDecisionManager->decide($token, $attributes, $request, true)) {
-            $exception = new AccessDeniedException();
-            $exception->setAttributes($attributes);
-            $exception->setSubject($request);
-
-            throw $exception;
+            throw $this->createAccessDeniedException($request, $attributes);
         }
+    }
+
+    private function createAccessDeniedException(Request $request, array $attributes)
+    {
+        $exception = new AccessDeniedException();
+        $exception->setAttributes($attributes);
+        $exception->setSubject($request);
+
+        return $exception;
+    }
+
+    public static function getPriority(): int
+    {
+        return -255;
     }
 }

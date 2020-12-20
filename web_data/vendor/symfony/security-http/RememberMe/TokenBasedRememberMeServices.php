@@ -35,7 +35,7 @@ class TokenBasedRememberMeServices extends AbstractRememberMeServices
             throw new AuthenticationException('The cookie is invalid.');
         }
 
-        list($class, $username, $expires, $hash) = $cookieParts;
+        [$class, $username, $expires, $hash] = $cookieParts;
         if (false === $username = base64_decode($username, true)) {
             throw new AuthenticationException('$username contains a character from outside the base64 alphabet.');
         }
@@ -50,7 +50,7 @@ class TokenBasedRememberMeServices extends AbstractRememberMeServices
         }
 
         if (!$user instanceof UserInterface) {
-            throw new \RuntimeException(sprintf('The UserProviderInterface implementation must return an instance of UserInterface, but returned "%s".', \get_class($user)));
+            throw new \RuntimeException(sprintf('The UserProviderInterface implementation must return an instance of UserInterface, but returned "%s".', get_debug_type($user)));
         }
 
         if (true !== hash_equals($this->generateCookieHash($class, $username, $expires, $user->getPassword()), $hash)) {

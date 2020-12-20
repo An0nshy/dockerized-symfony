@@ -21,8 +21,6 @@ if (!interface_exists(LocaleAwareInterface::class)) {
 
 /**
  * @author Titouan Galopin <galopintitouan@gmail.com>
- *
- * @experimental in 5.0
  */
 class AsciiSlugger implements SluggerInterface, LocaleAwareInterface
 {
@@ -57,6 +55,9 @@ class AsciiSlugger implements SluggerInterface, LocaleAwareInterface
     ];
 
     private $defaultLocale;
+    private $symbolsMap = [
+        'en' => ['@' => 'at', '&' => 'and'],
+    ];
 
     /**
      * Cache of transliterators per locale.
@@ -65,9 +66,17 @@ class AsciiSlugger implements SluggerInterface, LocaleAwareInterface
      */
     private $transliterators = [];
 
-    public function __construct(string $defaultLocale = null)
+    /**
+     * @param array|\Closure|null $symbolsMap
+     */
+    public function __construct(string $defaultLocale = null, $symbolsMap = null)
     {
+        if (null !== $symbolsMap && !\is_array($symbolsMap) && !$symbolsMap instanceof \Closure) {
+            throw new \TypeError(sprintf('Argument 2 passed to "%s()" must be array, Closure or null, "%s" given.', __METHOD__, \gettype($symbolsMap)));
+        }
+
         $this->defaultLocale = $defaultLocale;
+        $this->symbolsMap = $symbolsMap ?? $this->symbolsMap;
     }
 
     /**
@@ -101,9 +110,22 @@ class AsciiSlugger implements SluggerInterface, LocaleAwareInterface
             $transliterator = (array) $this->createTransliterator($locale);
         }
 
-        return (new UnicodeString($string))
-            ->ascii($transliterator)
-            ->replace('@', $separator.'at'.$separator)
+        if ($this->symbolsMap instanceof \Closure) {
+            $symbolsMap = $this->symbolsMap;
+            array_unshift($transliterator, static function ($s) use ($symbolsMap, $locale) {
+                return $symbolsMap($s, $locale);
+            });
+        }
+
+        $unicodeString = (new UnicodeString($string))->ascii($transliterator);
+
+        if (\is_array($this->symbolsMap) && isset($this->symbolsMap[$locale])) {
+            foreach ($this->symbolsMap[$locale] as $char => $replace) {
+                $unicodeString = $unicodeString->replace($char, ' '.$replace.' ');
+            }
+        }
+
+        return $unicodeString
             ->replaceMatches('/[^A-Za-z0-9]++/', $separator)
             ->trim($separator)
         ;

@@ -26,20 +26,18 @@ use Symfony\Component\String\Exception\RuntimeException;
  * @author Hugo Hamon <hugohamon@neuf.fr>
  *
  * @throws ExceptionInterface
- *
- * @experimental in 5.0
  */
-abstract class AbstractString implements \JsonSerializable
+abstract class AbstractString implements \Stringable, \JsonSerializable
 {
-    public const PREG_PATTERN_ORDER = PREG_PATTERN_ORDER;
-    public const PREG_SET_ORDER = PREG_SET_ORDER;
-    public const PREG_OFFSET_CAPTURE = PREG_OFFSET_CAPTURE;
-    public const PREG_UNMATCHED_AS_NULL = PREG_UNMATCHED_AS_NULL;
+    public const PREG_PATTERN_ORDER = \PREG_PATTERN_ORDER;
+    public const PREG_SET_ORDER = \PREG_SET_ORDER;
+    public const PREG_OFFSET_CAPTURE = \PREG_OFFSET_CAPTURE;
+    public const PREG_UNMATCHED_AS_NULL = \PREG_UNMATCHED_AS_NULL;
 
     public const PREG_SPLIT = 0;
-    public const PREG_SPLIT_NO_EMPTY = PREG_SPLIT_NO_EMPTY;
-    public const PREG_SPLIT_DELIM_CAPTURE = PREG_SPLIT_DELIM_CAPTURE;
-    public const PREG_SPLIT_OFFSET_CAPTURE = PREG_SPLIT_OFFSET_CAPTURE;
+    public const PREG_SPLIT_NO_EMPTY = \PREG_SPLIT_NO_EMPTY;
+    public const PREG_SPLIT_DELIM_CAPTURE = \PREG_SPLIT_DELIM_CAPTURE;
+    public const PREG_SPLIT_OFFSET_CAPTURE = \PREG_SPLIT_OFFSET_CAPTURE;
 
     protected $string = '';
     protected $ignoreCase = false;
@@ -100,7 +98,6 @@ abstract class AbstractString implements \JsonSerializable
     public function after($needle, bool $includeNeedle = false, int $offset = 0): self
     {
         $str = clone $this;
-        $str->string = '';
         $i = \PHP_INT_MAX;
 
         foreach ((array) $needle as $n) {
@@ -132,7 +129,6 @@ abstract class AbstractString implements \JsonSerializable
     public function afterLast($needle, bool $includeNeedle = false, int $offset = 0): self
     {
         $str = clone $this;
-        $str->string = '';
         $i = null;
 
         foreach ((array) $needle as $n) {
@@ -169,7 +165,6 @@ abstract class AbstractString implements \JsonSerializable
     public function before($needle, bool $includeNeedle = false, int $offset = 0): self
     {
         $str = clone $this;
-        $str->string = '';
         $i = \PHP_INT_MAX;
 
         foreach ((array) $needle as $n) {
@@ -201,7 +196,6 @@ abstract class AbstractString implements \JsonSerializable
     public function beforeLast($needle, bool $includeNeedle = false, int $offset = 0): self
     {
         $str = clone $this;
-        $str->string = '';
         $i = null;
 
         foreach ((array) $needle as $n) {
@@ -254,6 +248,14 @@ abstract class AbstractString implements \JsonSerializable
         $str->string = trim(preg_replace('/(?:\s{2,}+|[^\S ])/', ' ', $str->string));
 
         return $str;
+    }
+
+    /**
+     * @param string|string[] $needle
+     */
+    public function containsAny($needle): bool
+    {
+        return null !== $this->indexOf($needle);
     }
 
     /**
@@ -470,6 +472,11 @@ abstract class AbstractString implements \JsonSerializable
     /**
      * @return static
      */
+    abstract public function reverse(): self;
+
+    /**
+     * @return static
+     */
     abstract public function slice(int $start = 0, int $length = null): self;
 
     /**
@@ -617,7 +624,7 @@ abstract class AbstractString implements \JsonSerializable
     /**
      * @return static
      */
-    public function truncate(int $length, string $ellipsis = ''): self
+    public function truncate(int $length, string $ellipsis = '', bool $cut = true): self
     {
         $stringLength = $this->length();
 
@@ -631,6 +638,14 @@ abstract class AbstractString implements \JsonSerializable
             $ellipsisLength = 0;
         }
 
+        if (!$cut) {
+            if (null === $length = $this->indexOf([' ', "\r", "\n", "\t"], ($length ?: 1) - 1)) {
+                return clone $this;
+            }
+
+            $length += $ellipsisLength;
+        }
+
         $str = $this->slice(0, $length - $ellipsisLength);
 
         return $ellipsisLength ? $str->trimEnd()->append($ellipsis) : $str;
@@ -641,6 +656,9 @@ abstract class AbstractString implements \JsonSerializable
      */
     abstract public function upper(): self;
 
+    /**
+     * Returns the printable length on a terminal.
+     */
     abstract public function width(bool $ignoreAnsiDecoration = true): int;
 
     /**
